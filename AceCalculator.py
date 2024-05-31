@@ -28,7 +28,7 @@ def getHurdatData(filePath):
     return allData[1:]
 
 
-def getStormAce(hurData, mon):
+def getStormAce(hurData, hurMonths):
     # slice all data prior to 1970
     hurNames = [storm[0] for storm in hurData]
     hurData = hurData[hurNames.index('AL011970'):]
@@ -39,7 +39,7 @@ def getStormAce(hurData, mon):
         currAce = 0
         for stormData in storm[1]:
             if stormData[1] in ['0000', '0600', '1200', '1800'] and stormData[3] in ['TS', 'HU', 'SS'] \
-                    and int(stormData[6]) >= 34 and int((stormData[0])[4:6]) in mon:
+                    and int(stormData[6]) >= 34 and int((stormData[0])[4:6]) in hurMonths:
                 currAce += int(stormData[6]) * int(stormData[6]) / 10000
             if float(stormData[4][:-1]) < 13 and float(stormData[5][:-1]) > 87:
                 break
@@ -49,7 +49,7 @@ def getStormAce(hurData, mon):
 
 def getMonthAce(hurMonths):
     # get ACE for each storm that occurs in the chosen month(s)
-    allHurdatData = getHurdatData('C:/Users/Ketan Trivedi/Desktop/Nikhil/hurdatdata.txt')
+    allHurdatData = getHurdatData('C:/Nikhil Stuff/Coding Stuff/hurdatdata.txt')
     stormAce = getStormAce(allHurdatData, hurMonths)
 
     # get names and years of all storms from 1970-present
@@ -59,12 +59,12 @@ def getMonthAce(hurMonths):
     stormYears = [storm[-4:] for storm in names]
 
     allAce = []
-    for year in range(1970, 2023):
+    for year in range(1970, 2024):
         # get list of storms for the given year
         seasonAce = stormAce[stormYears.index(str(year)):]
         tempYears = stormYears[stormYears.index(str(year)):]
         num = 0
-        while int(tempYears[num]) == year:
+        while num < len(tempYears) and int(tempYears[num]) == year:
             num += 1
         seasonAce = seasonAce[:num]
 

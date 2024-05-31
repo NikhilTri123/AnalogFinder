@@ -3,9 +3,8 @@ import numpy as np
 import cartopy.crs as ccrs
 import cartopy.feature as cf
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 
-analogYears = [1998, 2010]  # years to plot ACE density anomaly map for
+analogYears = [2012]  # years to plot ACE density anomaly map for
 
 # get hurdat data from 1851-present
 allHurdatData = AceCalculator.getHurdatData('C:/Nikhil Stuff/Coding Stuff/hurdatdata.txt')
@@ -20,8 +19,7 @@ for storm in allHurdatData:
     for stormData in storm:
         # only include data if it meets the requirements for ACE calculation
         if stormData[1] in ['0000', '0600', '1200', '1800'] and stormData[3] in ['TS', 'HU', 'SS'] \
-                and int(stormData[6]) >= 34:
-            stormData = np.array(stormData)
+                and int(stormData[6]) >= 34 and int(stormData[0][:4]) >= 1970:
             allX.append(float(stormData[5][:-1]) * -1)
             allY.append(float(stormData[4][:-1]))
             allAce.append(int(stormData[6]) * int(stormData[6]) / 10000)
@@ -33,9 +31,9 @@ for storm in allHurdatData:
                 analogAce.append(int(stormData[6]) * int(stormData[6]) / 10000)
 
 # calculate histograms for all data and analog data and then subtract to get the anomaly
-allHist2d = np.histogram2d(allX, allY, bins=20, density=True, weights=allAce, range=([-120, 0], [0, 60]))
-analogHist2d = np.histogram2d(analogX, analogY, bins=20, density=True, weights=analogAce, range=([-120, 0], [0, 60]))
-diffHist = analogHist2d[0] - allHist2d[0]
+allHist2d = np.histogram2d(allX, allY, bins=[20, 10], weights=allAce, range=([-120, 0], [0, 60]))
+analogHist2d = np.histogram2d(analogX, analogY, bins=[20, 10], weights=analogAce, range=([-120, 0], [0, 60]))
+diffHist = analogHist2d[0] / len(analogYears) - allHist2d[0] / 54
 
 # plot cartopy map and various features
 plt.figure(figsize=(12, 6))
@@ -54,10 +52,9 @@ gl.ylabel_style = {'size': 7, 'weight': 'bold', 'color': 'gray'}
 
 # add data and colormap
 plt.imshow(diffHist.T, interpolation='gaussian', cmap='RdBu_r', origin='lower', extent=[-120, 0, 0, 60],
-           norm=mcolors.TwoSlopeNorm(0))
+           vmin=-np.max(np.abs(diffHist)), vmax=np.max(np.abs(diffHist)))
 ax.set_extent([-100, -5, 5, 50])
 cbar = plt.colorbar(pad=0.015, aspect=27, shrink=0.99, extend='both')
-# cbar.set_ticks(np.arange(-0.0015, 0.0015, 0.0005))
 cbar.ax.tick_params(labelsize=7)
 
 mainTitle = "ACE Density Anomaly of Top Analogs"
